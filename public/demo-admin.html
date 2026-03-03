@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo — Admin Panel</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/nav.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="site-nav">
+      <a href="demo-index.html"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Demo Home</a>
+      <a href="demo.html"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Slideshow</a>
+      <a href="demo-submit.html"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>Gửi lời chúc</a>
+      <a href="demo-admin.html" class="active"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Admin</a>
+    </nav>
+
+    <h1 class="page-title">Quản lý ảnh team nữ</h1>
+    <p class="page-subtitle">Demo — Dữ liệu mẫu, không kết nối Firebase</p>
+
+    <!-- Password gate (demo: any password works) -->
+    <div class="password-gate" id="password-gate">
+      <input type="password" id="admin-password" placeholder="Nhập mật khẩu (demo: bất kỳ)">
+      <button id="login-btn">Đăng nhập</button>
+      <span class="login-error" id="login-error" hidden>Sai mật khẩu</span>
+    </div>
+
+    <!-- Admin content -->
+    <div id="admin-content" hidden>
+      <!-- Quick actions -->
+      <div class="quick-actions">
+        <button class="preview-btn" type="button" onclick="alert('Demo: Mở preview slideshow')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Xem trước</button>
+        <button class="export-btn" type="button" onclick="alert('Demo: Xuất video WebM')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Xuất video</button>
+      </div>
+
+      <!-- Upload form -->
+      <details class="admin-section" open>
+        <summary class="section-toggle">Upload ảnh</summary>
+        <div class="section-body">
+          <form id="upload-form" onsubmit="event.preventDefault()">
+            <div class="form-group">
+              <span class="form-label">Chọn ảnh</span>
+              <label class="file-input-btn" id="photo-file-btn">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Chọn ảnh từ máy
+              </label>
+              <input type="file" id="photo-file" accept="image/*" multiple style="display:none">
+              <span class="file-input-label" id="photo-file-name"></span>
+            </div>
+            <div class="preview-area" id="preview-area"></div>
+            <div class="form-group">
+              <label for="photo-caption">Chú thích (tùy chọn)</label>
+              <input type="text" id="photo-caption" placeholder="VD: Team nữ phòng Marketing" maxlength="100">
+            </div>
+            <button type="submit" class="upload-btn" onclick="demoUpload()">Upload ảnh</button>
+          </form>
+          <div id="success-msg" class="message success-message" hidden></div>
+          <div id="error-msg" class="message error-message" hidden></div>
+        </div>
+      </details>
+
+      <!-- Photo grid -->
+      <details class="admin-section" id="photo-section">
+        <summary class="section-toggle">Ảnh đã upload (<span id="photo-count">6</span>)</summary>
+        <div class="section-body">
+          <div class="photo-grid-actions">
+            <button type="button" class="optimize-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg> Tối ưu ảnh cũ</button>
+            <button type="button" class="dedupe-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Tìm trùng lặp</button>
+            <button type="button" class="bulk-select-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Chọn nhiều</button>
+          </div>
+          <div class="photo-grid" id="photo-grid"></div>
+        </div>
+      </details>
+
+      <!-- Music section -->
+      <details class="admin-section">
+        <summary class="section-toggle">Danh sách nhạc nền</summary>
+        <div class="section-body">
+          <div class="music-tabs">
+            <button class="music-tab active" type="button">Thêm YouTube URL</button>
+            <button class="music-tab" type="button">Thêm file MP3</button>
+          </div>
+          <form onsubmit="event.preventDefault()">
+            <div class="form-group">
+              <label for="youtube-url">Link YouTube</label>
+              <input type="text" id="youtube-url" placeholder="VD: https://www.youtube.com/watch?v=..." autocomplete="off">
+            </div>
+            <button type="submit" class="upload-btn">Thêm vào danh sách</button>
+          </form>
+          <div id="music-success-msg" class="message success-message" hidden></div>
+
+          <h3 class="playlist-header">Bài hát đang dùng (<span id="playlist-count">2</span>)</h3>
+          <ul id="playlist-area" class="playlist-list"></ul>
+        </div>
+      </details>
+
+      <!-- Settings -->
+      <details class="admin-section">
+        <summary class="section-toggle">Cài đặt Thời gian &amp; Hiệu ứng</summary>
+        <div class="section-body">
+          <form onsubmit="event.preventDefault()">
+            <div class="form-group">
+              <label for="setting-slide-duration">Thời gian hiển thị 1 ảnh (giây)</label>
+              <input type="number" id="setting-slide-duration" min="3" max="60" step="1" value="8">
+            </div>
+            <div class="form-group">
+              <label for="setting-transition-duration">Thời gian mờ chồng ảnh (giây)</label>
+              <input type="number" id="setting-transition-duration" min="0" max="5" step="0.1" value="1.5">
+            </div>
+            <div class="form-group checkbox-group">
+              <input type="checkbox" id="setting-enable-kenburns" checked>
+              <label for="setting-enable-kenburns">Bật hiệu ứng chuyển động ảnh (Ken Burns / Zoom / Pan)</label>
+            </div>
+            <button type="submit" class="upload-btn" onclick="demoSave('Cài đặt')">Lưu Cài đặt</button>
+          </form>
+          <div id="settings-success-msg" class="message success-message" hidden></div>
+        </div>
+      </details>
+
+      <!-- Event config -->
+      <details class="admin-section">
+        <summary class="section-toggle">Nội dung sự kiện</summary>
+        <div class="section-body">
+          <p class="page-subtitle">Tùy chỉnh tiêu đề, phụ đề cho intro &amp; outro slide</p>
+          <form onsubmit="event.preventDefault()">
+            <div class="form-group">
+              <label>Tiêu đề Intro</label>
+              <input type="text" value="Chúc mừng ngày Quốc tế Phụ nữ" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label>Phụ đề Intro</label>
+              <input type="text" value="Gửi tặng những bông hoa đẹp nhất của công ty" maxlength="150">
+            </div>
+            <div class="form-group">
+              <label>Ngày hiển thị</label>
+              <input type="text" value="8 / 3" maxlength="20">
+            </div>
+            <div class="form-group">
+              <label>Tiêu đề Outro</label>
+              <input type="text" value="Cảm ơn các chị em" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label>Phụ đề Outro</label>
+              <input type="text" value="Chúc luôn rạng rỡ, hạnh phúc và thành công" maxlength="150">
+            </div>
+            <div class="form-group">
+              <label>Tagline Outro</label>
+              <input type="text" value="Happy Women's Day" maxlength="100">
+            </div>
+            <button type="submit" class="upload-btn" onclick="demoSave('Nội dung sự kiện')">Lưu nội dung</button>
+          </form>
+          <div id="event-success-msg" class="message success-message" hidden></div>
+        </div>
+      </details>
+
+      <!-- Wishes -->
+      <details class="admin-section">
+        <summary class="section-toggle">Lời chúc đã nhận (<span id="wish-count">3</span>)</summary>
+        <div class="section-body">
+          <div class="wish-list" id="wish-list"></div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <script>
+    // Mock data
+    const mockPhotos = [
+      { id: 'p1', url: 'https://picsum.photos/400/530?random=10', caption: 'Team nữ phòng Kỹ thuật' },
+      { id: 'p2', url: 'https://picsum.photos/400/530?random=11', caption: 'Chị Lan - PM' },
+      { id: 'p3', url: 'https://picsum.photos/400/530?random=12', caption: 'Team nữ phòng Marketing' },
+      { id: 'p4', url: 'https://picsum.photos/400/530?random=13', caption: 'Chị Hương - Designer' },
+      { id: 'p5', url: 'https://picsum.photos/400/530?random=14', caption: 'Team nữ phòng HR' },
+      { id: 'p6', url: 'https://picsum.photos/400/530?random=15', caption: 'Chị Mai - QA Lead' },
+    ];
+
+    const mockPlaylist = [
+      { type: 'youtube', title: 'YouTube: Happy Women\'s Day Music' },
+      { type: 'mp3', title: 'MP3: Nhạc nền sự kiện.mp3' },
+    ];
+
+    const mockWishes = [
+      { id: 'w1', sender: 'Anh Tuấn', message: 'Chúc các chị ngày 8/3 thật nhiều niềm vui!', date: '08/03/2025' },
+      { id: 'w2', sender: 'Anh Minh', message: 'Happy Women\'s Day! Chúc các chị luôn xinh đẹp', date: '08/03/2025' },
+      { id: 'w3', sender: 'Anh Đức', message: 'Ngày 8/3 chúc team nữ mãi mãi rạng rỡ như hoa', date: '07/03/2025' },
+    ];
+
+    function escapeHTML(str) {
+      if (!str) return '';
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Login — any password works in demo
+      const gate = document.getElementById('password-gate');
+      const content = document.getElementById('admin-content');
+      const loginBtn = document.getElementById('login-btn');
+      const pwdInput = document.getElementById('admin-password');
+
+      function doLogin() {
+        if (!pwdInput.value.trim()) {
+          document.getElementById('login-error').hidden = false;
+          return;
+        }
+        gate.hidden = true;
+        content.hidden = false;
+        renderPhotos();
+        renderPlaylist();
+        renderWishes();
+      }
+      loginBtn.addEventListener('click', doLogin);
+      pwdInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+      pwdInput.addEventListener('input', () => { document.getElementById('login-error').hidden = true; });
+
+      // File picker preview
+      const fileInput = document.getElementById('photo-file');
+      const fileBtn = document.getElementById('photo-file-btn');
+      const previewArea = document.getElementById('preview-area');
+      const fileName = document.getElementById('photo-file-name');
+
+      fileBtn.addEventListener('click', (e) => { e.preventDefault(); fileInput.click(); });
+      fileInput.addEventListener('change', () => {
+        previewArea.innerHTML = '';
+        const files = fileInput.files;
+        if (files.length === 0) { fileName.textContent = ''; return; }
+        fileName.textContent = files.length === 1 ? files[0].name : `${files.length} ảnh đã chọn`;
+        for (const f of files) {
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(f);
+          img.alt = 'Preview';
+          previewArea.appendChild(img);
+        }
+      });
+    });
+
+    function renderPhotos() {
+      const grid = document.getElementById('photo-grid');
+      grid.innerHTML = mockPhotos.map(p => `
+        <div class="photo-card" draggable="true">
+          <div class="drag-handle" title="Kéo để sắp xếp"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><circle cx="8" cy="4" r="2"/><circle cx="16" cy="4" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="8" cy="20" r="2"/><circle cx="16" cy="20" r="2"/></svg></div>
+          <img src="${p.url}" alt="${escapeHTML(p.caption)}" loading="lazy">
+          <div class="card-caption">${escapeHTML(p.caption)}</div>
+          <button class="delete-btn" title="Xóa ảnh" onclick="alert('Demo: Xóa ảnh')"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+      `).join('');
+    }
+
+    function renderPlaylist() {
+      const list = document.getElementById('playlist-area');
+      list.innerHTML = mockPlaylist.map((t, i) => `
+        <li class="playlist-item" draggable="true">
+          <div class="playlist-drag-handle" title="Kéo để sắp xếp"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><circle cx="8" cy="4" r="2"/><circle cx="16" cy="4" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="8" cy="20" r="2"/><circle cx="16" cy="20" r="2"/></svg></div>
+          <div class="playlist-item-info">
+            <span class="playlist-item-index">#${i + 1}</span>
+            <span class="playlist-item-title">${escapeHTML(t.title)}</span>
+          </div>
+          <button class="delete-track-btn" onclick="alert('Demo: Xóa bài hát')">Xóa</button>
+        </li>
+      `).join('');
+    }
+
+    function renderWishes() {
+      const list = document.getElementById('wish-list');
+      list.innerHTML = mockWishes.map(w => `
+        <div class="wish-item">
+          <div class="wish-item-content">
+            <span class="wish-sender">${escapeHTML(w.sender)}</span>
+            <span class="wish-date">${w.date}</span>
+            <p class="wish-message">${escapeHTML(w.message)}</p>
+          </div>
+          <button class="wish-delete-btn" title="Xóa lời chúc" onclick="alert('Demo: Xóa lời chúc')"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+      `).join('');
+    }
+
+    function demoUpload() {
+      const msg = document.getElementById('success-msg');
+      msg.textContent = 'Demo: Upload thành công! (không lưu dữ liệu)';
+      msg.hidden = false;
+      setTimeout(() => { msg.hidden = true; }, 3000);
+    }
+
+    function demoSave(section) {
+      alert(`Demo: Đã lưu ${section} (không lưu dữ liệu)`);
+    }
+  </script>
+</body>
+</html>

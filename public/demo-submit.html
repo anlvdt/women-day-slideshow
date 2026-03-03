@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo — Gửi lời chúc 8/3</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/submit.css">
+  <link rel="stylesheet" href="css/nav.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="site-nav">
+      <a href="demo-index.html"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Demo Home</a>
+      <a href="demo.html"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Slideshow</a>
+      <a href="demo-submit.html" class="active"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>Gửi lời chúc</a>
+      <a href="demo-admin.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Admin</a>
+    </nav>
+
+    <h1 class="page-title">Gửi lời chúc 8/3</h1>
+    <p class="page-subtitle">Demo — Gửi lời chúc đến team nữ nhân ngày Quốc tế Phụ nữ</p>
+
+    <form id="wish-form" novalidate>
+      <div class="form-group">
+        <label for="sender-name">Tên người gửi</label>
+        <input type="text" id="sender-name" placeholder="Nhập tên của bạn" maxlength="50" required>
+        <span class="field-error" id="sender-name-error"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="message">Lời chúc</label>
+        <div class="message-wrapper">
+          <div id="message-editable" class="content-editable-input" contenteditable="true"
+            data-placeholder="Viết lời chúc của bạn..." role="textbox" aria-multiline="true"
+            aria-label="Lời chúc"></div>
+          <button type="button" id="emoji-toggle" class="emoji-toggle" aria-label="Chọn Icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+              <line x1="9" y1="9" x2="9.01" y2="9"></line>
+              <line x1="15" y1="9" x2="15.01" y2="9"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="message-meta">
+          <span class="char-count" id="char-count">0 ký tự</span>
+        </div>
+        <div id="svg-picker-container" class="svg-picker-container" hidden></div>
+        <span class="field-error" id="message-error"></span>
+      </div>
+
+      <div class="wish-preview" id="wish-preview" hidden>
+        <p class="wish-preview-label">Xem trước:</p>
+        <div class="wish-preview-card">
+          <span class="wish-preview-sender" id="preview-sender"></span>
+          <span class="wish-preview-message" id="preview-message"></span>
+        </div>
+      </div>
+
+      <button type="submit" id="submit-btn" class="submit-btn">Gửi lời chúc</button>
+    </form>
+
+    <div id="success-message" class="message success-message" hidden>
+      <p>Gửi lời chúc thành công! (Demo — không lưu dữ liệu)</p>
+      <button type="button" id="send-another-btn" class="send-another-btn">Gửi lời chúc khác</button>
+    </div>
+    <div id="error-message" class="message error-message" hidden></div>
+  </div>
+
+  <script>
+    // SVG Icons for picker
+    const SVG_ICONS = [
+      { name: 'heart', svg: '<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>' },
+      { name: 'star', svg: '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' },
+      { name: 'flower', svg: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="currentColor"/><circle cx="12" cy="5" r="3" fill="currentColor" opacity="0.7"/><circle cx="17.5" cy="8.5" r="3" fill="currentColor" opacity="0.7"/><circle cx="17.5" cy="15.5" r="3" fill="currentColor" opacity="0.7"/><circle cx="12" cy="19" r="3" fill="currentColor" opacity="0.7"/><circle cx="6.5" cy="15.5" r="3" fill="currentColor" opacity="0.7"/><circle cx="6.5" cy="8.5" r="3" fill="currentColor" opacity="0.7"/></svg>' },
+      { name: 'sun', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>' },
+      { name: 'gift', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>' },
+      { name: 'sparkle', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>' },
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('wish-form');
+      const nameInput = document.getElementById('sender-name');
+      const messageEl = document.getElementById('message-editable');
+      const charCount = document.getElementById('char-count');
+      const emojiToggle = document.getElementById('emoji-toggle');
+      const pickerContainer = document.getElementById('svg-picker-container');
+      const preview = document.getElementById('wish-preview');
+      const previewSender = document.getElementById('preview-sender');
+      const previewMessage = document.getElementById('preview-message');
+      const successMsg = document.getElementById('success-message');
+      const sendAnotherBtn = document.getElementById('send-another-btn');
+      const nameError = document.getElementById('sender-name-error');
+      const msgError = document.getElementById('message-error');
+
+      // Build SVG picker
+      SVG_ICONS.forEach(icon => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'svg-icon-btn';
+        btn.title = icon.name;
+        btn.innerHTML = icon.svg;
+        btn.addEventListener('click', () => {
+          messageEl.focus();
+          const sel = window.getSelection();
+          const range = sel.getRangeAt(0);
+          const span = document.createElement('span');
+          span.innerHTML = icon.svg;
+          const svgEl = span.firstChild;
+          svgEl.style.width = '1.25em';
+          svgEl.style.height = '1.25em';
+          svgEl.style.verticalAlign = 'middle';
+          svgEl.style.fill = 'currentColor';
+          range.insertNode(svgEl);
+          range.setStartAfter(svgEl);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+          updatePreview();
+          updateCharCount();
+        });
+        pickerContainer.appendChild(btn);
+      });
+
+      // Toggle picker
+      emojiToggle.addEventListener('click', () => {
+        const isOpen = !pickerContainer.hidden;
+        pickerContainer.hidden = isOpen;
+        emojiToggle.classList.toggle('active', !isOpen);
+      });
+
+      // Char count
+      function updateCharCount() {
+        const text = messageEl.textContent || '';
+        charCount.textContent = `${text.length} ký tự`;
+      }
+      messageEl.addEventListener('input', () => { updateCharCount(); updatePreview(); });
+      nameInput.addEventListener('input', updatePreview);
+
+      // Preview
+      function updatePreview() {
+        const name = nameInput.value.trim();
+        const msg = messageEl.innerHTML.trim();
+        if (name || msg) {
+          preview.hidden = false;
+          previewSender.textContent = name || '(Chưa nhập tên)';
+          previewMessage.innerHTML = msg || '(Chưa nhập lời chúc)';
+        } else {
+          preview.hidden = true;
+        }
+      }
+
+      // Submit
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        nameError.textContent = '';
+        msgError.textContent = '';
+
+        const name = nameInput.value.trim();
+        const msg = (messageEl.textContent || '').trim();
+        let valid = true;
+
+        if (!name) { nameError.textContent = 'Vui lòng nhập tên'; valid = false; }
+        if (!msg) { msgError.textContent = 'Vui lòng nhập lời chúc'; valid = false; }
+        if (!valid) return;
+
+        form.hidden = true;
+        preview.hidden = true;
+        successMsg.hidden = false;
+      });
+
+      // Send another
+      sendAnotherBtn.addEventListener('click', () => {
+        successMsg.hidden = true;
+        form.hidden = false;
+        nameInput.value = '';
+        messageEl.innerHTML = '';
+        updateCharCount();
+        updatePreview();
+      });
+    });
+  </script>
+</body>
+</html>

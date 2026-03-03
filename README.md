@@ -4,14 +4,15 @@
 
 ## Demo
 
-Ứng dụng bao gồm trang `demo.html` chạy offline với dữ liệu mẫu (không cần Firebase). Sau khi clone repo, mở file `public/demo.html` trong trình duyệt để xem demo slideshow với đầy đủ hiệu ứng.
+**[Xem Demo trực tuyến](https://anlvdt.github.io/women-day-slideshow/public/demo-index.html)** — Chạy trực tiếp trên trình duyệt, không cần cài đặt.
 
-| Trang | Mô tả |
-|-------|-------|
-| `index.html` | Slideshow fullscreen với hiệu ứng Ken Burns, transition, particles, petals. Kết nối Firestore realtime. |
-| `submit.html` | Form gửi lời chúc với SVG icon picker. Responsive, hoạt động trên mobile. |
-| `admin.html` | Quản lý ảnh, nhạc, cài đặt slideshow, lời chúc. Bảo vệ bằng mật khẩu. |
-| `demo.html` | Demo offline với ảnh mẫu từ picsum.photos, tự động chạy slideshow. |
+| Demo | Mô tả |
+|------|-------|
+| [Slideshow](https://anlvdt.github.io/women-day-slideshow/public/demo.html) | Fullscreen slideshow với Ken Burns, transition, particles, petals |
+| [Gửi lời chúc](https://anlvdt.github.io/women-day-slideshow/public/demo-submit.html) | Form gửi lời chúc với SVG icon picker, preview realtime |
+| [Admin Panel](https://anlvdt.github.io/women-day-slideshow/public/demo-admin.html) | Quản lý ảnh, nhạc, cài đặt — mock data |
+
+Các trang production (`index.html`, `submit.html`, `admin.html`) kết nối Firebase Firestore và cần cấu hình riêng.
 
 ## Tính năng
 
@@ -85,7 +86,10 @@ public/
 ├── index.html          # Trang slideshow (fullscreen)
 ├── submit.html         # Trang gửi lời chúc
 ├── admin.html          # Trang quản lý
-├── demo.html           # Demo offline (không cần Firebase)
+├── demo-index.html     # Landing page demo (GitHub Pages)
+├── demo.html           # Demo slideshow offline
+├── demo-submit.html    # Demo form gửi lời chúc
+├── demo-admin.html     # Demo admin panel (mock data)
 ├── css/
 │   ├── slideshow.css   # Styles slideshow + effects
 │   ├── admin.css       # Styles admin page

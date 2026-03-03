@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Women Day Slideshow — Demo</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;display:flex;justify-content:center;align-items:center;background:linear-gradient(135deg,#fce4ec 0%,#f8bbd0 40%,#f48fb1 100%);font-family:'Dancing Script',cursive,sans-serif;color:#4a1942;padding:1.5rem}
+    .container{width:100%;max-width:720px;background:rgba(255,255,255,0.85);backdrop-filter:blur(10px);border-radius:20px;padding:2.5rem 2rem;box-shadow:0 8px 32px rgba(233,30,99,0.15)}
+    h1{font-family:'Great Vibes',cursive;font-size:2.8rem;text-align:center;color:#c2185b;margin-bottom:0.25rem;line-height:1.2}
+    .subtitle{text-align:center;font-size:1.1rem;color:#ad1457;margin-bottom:2rem;opacity:0.85}
+    .cards{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+    .card{display:flex;flex-direction:column;border-radius:14px;overflow:hidden;border:2px solid #f8bbd0;background:rgba(255,255,255,0.6);transition:transform 0.2s,box-shadow 0.2s;text-decoration:none;color:inherit}
+    .card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(233,30,99,0.2)}
+    .card-img{width:100%;aspect-ratio:16/9;object-fit:cover;background:linear-gradient(135deg,#f8bbd0,#f48fb1);display:flex;align-items:center;justify-content:center;font-size:3rem;color:#c2185b}
+    .card-body{padding:1rem}
+    .card-title{font-family:'Great Vibes',cursive;font-size:1.5rem;color:#c2185b;margin-bottom:0.3rem}
+    .card-desc{font-size:0.95rem;color:#880e4f;line-height:1.4}
+    .badge{display:inline-block;padding:0.2rem 0.6rem;font-size:0.75rem;font-weight:700;border-radius:6px;margin-top:0.5rem}
+    .badge-live{background:#c8e6c9;color:#2e7d32}
+    .badge-static{background:#e1bee7;color:#6a1b9a}
+    .footer{text-align:center;margin-top:2rem;font-size:0.9rem;color:#ad1457;opacity:0.7}
+    .footer a{color:#c2185b;text-decoration:none;font-weight:700}
+    .footer a:hover{text-decoration:underline}
+    @media(max-width:520px){.cards{grid-template-columns:1fr}h1{font-size:2.2rem}.container{padding:1.75rem 1.25rem}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Women Day Slideshow</h1>
+    <p class="subtitle">Demo giao dien ung dung trinh chieu 8/3 va 20/10</p>
+
+    <div class="cards">
+      <a class="card" href="demo.html">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div class="card-body">
+          <div class="card-title">Slideshow</div>
+          <div class="card-desc">Fullscreen slideshow voi hieu ung Ken Burns, transition, particles, petals va loi chuc</div>
+          <span class="badge badge-live">Auto-play</span>
+        </div>
+      </a>
+
+      <a class="card" href="demo-submit.html">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <div class="card-body">
+          <div class="card-title">Gui loi chuc</div>
+          <div class="card-desc">Form gui loi chuc voi SVG icon picker, preview realtime, responsive mobile</div>
+          <span class="badge badge-static">Interactive</span>
+        </div>
+      </a>
+
+      <a class="card" href="demo-admin.html">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
+        <div class="card-body">
+          <div class="card-title">Admin Panel</div>
+          <div class="card-desc">Quan ly anh, nhac, cai dat slideshow, loi chuc. Mock data, khong can Firebase</div>
+          <span class="badge badge-static">Mock data</span>
+        </div>
+      </a>
+
+      <a class="card" href="https://github.com/anlvdt/women-day-slideshow" target="_blank" rel="noopener">
+        <div class="card-img">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        </div>
+        <div class="card-body">
+          <div class="card-title">Source Code</div>
+          <div class="card-desc">Xem ma nguon tren GitHub. Vanilla JS, Firebase, Vitest + fast-check</div>
+          <span class="badge badge-live">Open Source</span>
+        </div>
+      </a>
+    </div>
+
+    <p class="footer">Made with <svg viewBox="0 0 24 24" width="14" height="14" fill="#c2185b" style="vertical-align:middle"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg> for Women's Day &mdash; <a href="https://github.com/anlvdt/women-day-slideshow">GitHub</a></p>
+  </div>
+</body>
+</html>
