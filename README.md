@@ -399,15 +399,13 @@ Nếu bạn thấy dự án hữu ích, hãy cân nhắc ủng hộ tác giả.
 | MB Bank | `0360126996868` | LE VAN AN |
 | Momo | `0976896621` | LE VAN AN |
 
-### Mua sắm qua Shopee (Affiliate)
+### Shopee Affiliate
 
-Ủng hộ mình bằng cách mua sắm qua link Shopee bên dưới — bạn không mất thêm chi phí, mình nhận được một khoản hoa hồng nhỏ từ Shopee:
+Mình làm Affiliate Shopee, nếu thấy sản phẩm hữu ích hãy ủng hộ mình một click nhé. Chỉ cần click không cần mua cũng được!
 
-| Danh mục | Link |
-|----------|------|
-| Shopee Deal Hôm Nay | [shopee.vn/deal-hom-nay](https://shope.ee/YOUR_AFFILIATE_LINK_1) |
-| Flash Sale | [shopee.vn/flash-sale](https://shope.ee/YOUR_AFFILIATE_LINK_2) |
-| Shopee Mall | [shopee.vn/mall](https://shope.ee/YOUR_AFFILIATE_LINK_3) |
+[![Shopee](https://img.shields.io/badge/Shopee-EE4D2D?style=for-the-badge&logo=shopee&logoColor=white)](https://s.shopee.vn/7AYWh5NzOB)
+
+**[Xem sản phẩm trên Shopee](https://s.shopee.vn/7AYWh5NzOB)** — Xin cảm ơn!
 
 ### Ủng hộ khác
 
