@@ -5,7 +5,8 @@ import {
     buildSlides,
     createIntroSlide,
     transitionToSlide,
-    transitionToSpecialSlide
+    transitionToSpecialSlide,
+    sanitizeWishHTML
 } from "./slideshow.js";
 import {
     collection,
@@ -17,7 +18,8 @@ import {
     getDoc,
     query,
     orderBy,
-    serverTimestamp
+    serverTimestamp,
+    onSnapshot
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import {
     ref,
@@ -119,6 +121,27 @@ document.addEventListener("DOMContentLoaded", () => {
         wishCount: document.getElementById("wish-count"),
     };
 
+    // Delete buttons — use event delegation on grid
+    els.photoGrid.addEventListener("click", async (e) => {
+        const deleteBtn = e.target.closest(".delete-btn");
+        if (!deleteBtn) return;
+        if (!confirm("Bạn có chắc chắn muốn xóa ảnh này?")) return;
+        const card = deleteBtn.closest(".photo-card");
+        await deletePhoto(card.dataset.id, card.dataset.filename);
+    });
+
+    // Pagination controls
+    if (els.paginationBar) {
+        els.paginationBar.addEventListener("click", (e) => {
+            const btn = e.target.closest(".page-btn");
+            if (!btn || btn.disabled) return;
+            if (btn.dataset.dir === "prev" && currentPage > 0) currentPage--;
+            else if (btn.dataset.dir === "next") currentPage++;
+            renderGrid();
+            els.photoGrid.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+    }
+
     init();
 });
 
@@ -133,6 +156,11 @@ function init() {
         els.loginError.hidden = true;
         els.passwordInput.classList.remove("input-error");
     });
+
+    // Auto-login from session
+    if (sessionStorage.getItem("admin_logged_in") === "1") {
+        unlockAdmin();
+    }
 
     // --- Photo file picker ---
     // Label click triggers hidden input via JS
@@ -243,22 +271,27 @@ function init() {
  * @returns {string}
  */
 function escapeHTML(str) {
-  if (!str) return "";
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    if (!str) return "";
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+
+function unlockAdmin() {
+    els.passwordGate.hidden = true;
+    els.adminContent.hidden = false;
+    if (els.photoCount) els.photoCount.textContent = "...";
+    sessionStorage.setItem("admin_logged_in", "1");
+    loadPhotos();
+    loadMusicConfig();
+    loadSettingsConfig();
+    loadEventConfig();
+    loadWishes();
+}
 
 function handleLogin() {
     const pwd = els.passwordInput.value.trim();
     if (pwd === ADMIN_PASSWORD) {
-        els.passwordGate.hidden = true;
-        els.adminContent.hidden = false;
-        if (els.photoCount) els.photoCount.textContent = "...";
-        loadPhotos();
-        loadMusicConfig();
-        loadSettingsConfig();
-        loadEventConfig();
-        loadWishes();
+        unlockAdmin();
     } else {
         els.loginError.hidden = false;
         els.passwordInput.classList.add("input-error");
@@ -270,7 +303,7 @@ function handleLogin() {
 function showPreview() {
     // Revoke old blob URLs to prevent memory leaks
     els.previewArea.querySelectorAll("img").forEach(img => {
-      if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
+        if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
     });
     els.previewArea.innerHTML = "";
 
@@ -279,12 +312,18 @@ function showPreview() {
         return;
     }
 
+    const blobUrls = [];
     for (const file of selectedFiles) {
         const img = document.createElement("img");
-        img.src = URL.createObjectURL(file);
+        const url = URL.createObjectURL(file);
+        blobUrls.push(url);
+        img.src = url;
         img.alt = "Preview";
         els.previewArea.appendChild(img);
     }
+
+    // Store blob URLs for cleanup
+    els.previewArea._blobUrls = blobUrls;
 
     if (els.fileName) {
         els.fileName.textContent = selectedFiles.length === 1
@@ -294,6 +333,15 @@ function showPreview() {
 
     hideMsg();
 }
+
+// Cleanup blob URLs on page unload
+window.addEventListener('beforeunload', () => {
+    if (els.previewArea) {
+        els.previewArea.querySelectorAll("img").forEach(img => {
+            if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
+        });
+    }
+});
 
 // ===================== IMAGE COMPRESSION =====================
 const MAX_DIMENSION = 1920;
@@ -376,41 +424,43 @@ async function optimizeExistingPhotos() {
     let optimized = 0;
     let skipped = 0;
     let errors = 0;
+    let processed = 0;
 
-    for (let i = 0; i < photos.length; i++) {
-        const photo = photos[i];
-        statusEl.textContent = `Đang xử lý ${i + 1}/${photos.length}...`;
-
-        try {
-            // Load image via <img> with crossOrigin to allow Canvas export
-            const compressed = await compressImageFromUrl(photo.photoUrl);
-            if (!compressed) {
-                skipped++; // image failed to load (404, CORS, etc.)
-                continue;
-            }
-
-            // 1. Upload compressed to new path FIRST
-            const newFilename = `opt_${Date.now()}_${photo.filename}`;
-            const newStorageRef = ref(storage, `photos/${newFilename}`);
-            await uploadBytes(newStorageRef, compressed);
-            const newUrl = await getDownloadURL(newStorageRef);
-
-            // 2. Update Firestore doc BEFORE deleting old file
-            const oldFilename = photo.filename;
-            await setDoc(doc(db, "photos", photo.id), { photoUrl: newUrl, filename: newFilename }, { merge: true });
-            photo.photoUrl = newUrl;
-            photo.filename = newFilename;
-
-            // 3. Delete old file LAST (safe — Firestore already points to new file)
+    // Process in batches of 3 for concurrency control
+    const BATCH_SIZE = 3;
+    for (let i = 0; i < photos.length; i += BATCH_SIZE) {
+        const batch = photos.slice(i, i + BATCH_SIZE);
+        await Promise.allSettled(batch.map(async (photo) => {
             try {
-                await deleteObject(ref(storage, `photos/${oldFilename}`));
-            } catch (_) { /* ignore if old file already gone */ }
+                const compressed = await compressImageFromUrl(photo.photoUrl);
+                if (!compressed) {
+                    skipped++;
+                    return;
+                }
 
-            optimized++;
-        } catch (err) {
-            console.error(`Optimize error (${photo.id}):`, err);
-            errors++;
-        }
+                const newFilename = `opt_${Date.now()}_${photo.filename}`;
+                const newStorageRef = ref(storage, `photos/${newFilename}`);
+                await uploadBytes(newStorageRef, compressed);
+                const newUrl = await getDownloadURL(newStorageRef);
+
+                const oldFilename = photo.filename;
+                await setDoc(doc(db, "photos", photo.id), { photoUrl: newUrl, filename: newFilename }, { merge: true });
+                photo.photoUrl = newUrl;
+                photo.filename = newFilename;
+
+                try {
+                    await deleteObject(ref(storage, `photos/${oldFilename}`));
+                } catch (_) { /* ignore if old file already gone */ }
+
+                optimized++;
+            } catch (err) {
+                console.error(`Optimize error (${photo.id}):`, err);
+                errors++;
+            }
+        }));
+
+        processed += batch.length;
+        statusEl.textContent = `Đang xử lý ${processed}/${photos.length}...`;
     }
 
     els.optimizeBtn.disabled = false;
@@ -562,15 +612,6 @@ function renderGrid() {
   `;
     }).join("");
 
-    // Delete buttons
-    els.photoGrid.querySelectorAll(".delete-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-            if (!confirm("Bạn có chắc chắn muốn xóa ảnh này?")) return;
-            const card = btn.closest(".photo-card");
-            await deletePhoto(card.dataset.id, card.dataset.filename);
-        });
-    });
-
     // Pagination controls
     if (els.paginationBar) {
         if (totalPages <= 1) {
@@ -582,15 +623,6 @@ function renderGrid() {
                 <span class="page-info">Trang ${currentPage + 1} / ${totalPages}</span>
                 <button class="page-btn" data-dir="next" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>Sau →</button>
             `;
-            els.paginationBar.querySelectorAll(".page-btn").forEach(btn => {
-                btn.addEventListener("click", () => {
-                    if (btn.dataset.dir === "prev" && currentPage > 0) currentPage--;
-                    else if (btn.dataset.dir === "next" && currentPage < totalPages - 1) currentPage++;
-                    renderGrid();
-                    // Scroll to top of photo section
-                    els.photoGrid.scrollIntoView({ behavior: "smooth", block: "start" });
-                });
-            });
         }
     }
 
@@ -655,15 +687,19 @@ function initDragAndDrop() {
     });
 }
 
+let _saveOrderTimer = null;
 async function savePhotoOrder() {
-    try {
-        const orderList = photos.map(p => p.id);
-        await setDoc(doc(db, "config", "photoOrder"), { order: orderList }, { merge: true });
-        showSuccess("Đã lưu thứ tự ảnh");
-    } catch (err) {
-        console.error("Lỗi lưu thứ tự ảnh:", err);
-        showError("Lỗi lưu thứ tự ảnh");
-    }
+    clearTimeout(_saveOrderTimer);
+    _saveOrderTimer = setTimeout(async () => {
+        try {
+            const orderList = photos.map(p => p.id);
+            await setDoc(doc(db, "config", "photoOrder"), { order: orderList }, { merge: true });
+            showSuccess("Đã lưu thứ tự ảnh");
+        } catch (err) {
+            console.error("Lỗi lưu thứ tự ảnh:", err);
+            showError("Lỗi lưu thứ tự ảnh");
+        }
+    }, 500);
 }
 
 async function deletePhoto(id, filename) {
@@ -1101,18 +1137,33 @@ async function startExport() {
 }
 
 // ===================== WISHES MANAGEMENT =====================
-async function loadWishes() {
+let _unsubAdminWishes = null;
+
+function loadWishes() {
     if (els.wishList) els.wishList.innerHTML = '<p class="empty-grid">Đang tải...</p>';
+
+    // Unsubscribe previous listener if any
+    if (_unsubAdminWishes) { _unsubAdminWishes(); _unsubAdminWishes = null; }
+
     try {
         const q = query(collection(db, "wishes"), orderBy("createdAt", "desc"));
-        const snapshot = await getDocs(q);
-        const wishes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderWishes(wishes);
+        _unsubAdminWishes = onSnapshot(q, (snapshot) => {
+            const wishes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderWishes(wishes);
+        }, (err) => {
+            console.warn("Lỗi tải lời chúc:", err.message);
+            if (els.wishList) els.wishList.innerHTML = '<p class="empty-grid">Không tải được lời chúc</p>';
+        });
     } catch (err) {
         console.warn("Lỗi tải lời chúc:", err.message);
         if (els.wishList) els.wishList.innerHTML = '<p class="empty-grid">Không tải được lời chúc</p>';
     }
 }
+
+// Cleanup Firestore listener on page unload
+window.addEventListener('beforeunload', () => {
+    if (_unsubAdminWishes) { _unsubAdminWishes(); _unsubAdminWishes = null; }
+});
 
 function renderWishes(wishes) {
     if (els.wishCount) els.wishCount.textContent = wishes.length;
@@ -1124,14 +1175,31 @@ function renderWishes(wishes) {
         return;
     }
 
-    els.wishList.innerHTML = wishes.map(w => {
+    // Summary bar with distribution info
+    const photoCount = photos.length;
+    let distInfo = "";
+    if (photoCount > 0 && wishes.length > 0) {
+        const timesEach = Math.ceil(photoCount / wishes.length);
+        distInfo = ` · Mỗi lời chúc xuất hiện ~${timesEach} lần trên ${photoCount} slide`;
+    }
+
+    const summaryHTML = `<div class="wish-summary-bar">Tổng: ${wishes.length} lời chúc${distInfo}</div>`;
+
+    els.wishList.innerHTML = summaryHTML + wishes.map((w, idx) => {
         const date = w.createdAt?.toDate ? w.createdAt.toDate().toLocaleDateString("vi-VN") : "";
+        const msgText = (w.message || "").replace(/<[^>]*>?/gm, "").trim();
+        const isLong = msgText.length > 200;
+        const lengthWarning = isLong
+            ? `<span class="wish-length-warn" title="Lời chúc này dài ${msgText.length} ký tự, sẽ bị cắt trên slideshow">⚠️ Dài: ${msgText.length} chars</span>`
+            : "";
         return `
-        <div class="wish-item" data-id="${w.id}">
+        <div class="wish-item${isLong ? ' wish-item-long' : ''}" data-id="${w.id}">
+            <span class="wish-index">${idx + 1}</span>
             <div class="wish-item-content">
                 <span class="wish-sender">${escapeHTML(w.senderName)}</span>
                 <span class="wish-date">${date}</span>
-                <p class="wish-message">${escapeHTML(w.message)}</p>
+                ${lengthWarning}
+                <div class="wish-message">${sanitizeWishHTML(w.message)}</div>
             </div>
             <button class="wish-delete-btn" title="Xóa lời chúc"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>`;
@@ -1241,7 +1309,7 @@ async function bulkDeleteSelected() {
         try {
             await deleteDoc(doc(db, "photos", id));
             if (photo.filename) {
-                try { await deleteObject(ref(storage, `photos/${photo.filename}`)); } catch (_) {}
+                try { await deleteObject(ref(storage, `photos/${photo.filename}`)); } catch (_) { }
             }
             deleted++;
         } catch (err) {
@@ -1277,8 +1345,8 @@ async function bulkDeleteSelected() {
 function extractOriginalName(filename) {
     if (!filename) return "";
     let name = filename;
-    // Strip "opt_timestamp_" prefix if present
-    if (name.startsWith("opt_")) {
+    // Strip "opt_timestamp_" prefix if present (may be nested: opt_ts_opt_ts_...)
+    while (name.startsWith("opt_")) {
         name = name.replace(/^opt_\d+_/, "");
     }
     // Strip "timestamp_index_" prefix: digits_digits_rest

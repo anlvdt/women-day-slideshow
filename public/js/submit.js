@@ -104,7 +104,7 @@ const SVG_ICONS = [
  */
 function insertHtmlAtCursor(html) {
   const selection = window.getSelection();
-  if (!selection.rangeCount) return;
+  if (!selection || !selection.rangeCount) return;
 
   let range = selection.getRangeAt(0);
   range.deleteContents();
@@ -165,7 +165,7 @@ function setupSvgPicker(toggleBtn, pickerContainer, editableDiv) {
     e.preventDefault();
     const text = (e.clipboardData || e.originalEvent?.clipboardData)?.getData('text/plain') || '';
     const selection = window.getSelection();
-    if (!selection.rangeCount) return;
+    if (!selection || !selection.rangeCount) return;
     const range = selection.getRangeAt(0);
     range.deleteContents();
     const textNode = document.createTextNode(text);
@@ -197,14 +197,28 @@ document.addEventListener("DOMContentLoaded", () => {
     setupSvgPicker(svgToggle, svgPickerContainer, messageEditable);
   }
 
-  // Character count (#15)
+  // Character count with enforcement (#15)
+  const MAX_TEXT_CHARS = 200;
   if (messageEditable && charCountEl) {
+    let _charCountTimer = null;
     const updateCharCount = () => {
-      const len = messageEditable.textContent.length;
-      charCountEl.textContent = `${len} ký tự`;
+      clearTimeout(_charCountTimer);
+      _charCountTimer = setTimeout(() => {
+        const len = messageEditable.textContent.length;
+        charCountEl.textContent = `${len} / ${MAX_TEXT_CHARS} ký tự`;
+        if (len > MAX_TEXT_CHARS) {
+          charCountEl.style.color = '#d32f2f';
+          charCountEl.style.fontWeight = '700';
+        } else if (len > MAX_TEXT_CHARS * 0.8) {
+          charCountEl.style.color = '#e65100';
+          charCountEl.style.fontWeight = '600';
+        } else {
+          charCountEl.style.color = '';
+          charCountEl.style.fontWeight = '';
+        }
+      }, 100);
     };
     messageEditable.addEventListener("input", updateCharCount);
-    messageEditable.addEventListener("keyup", updateCharCount);
   }
 
   // Live preview (#16)
@@ -239,7 +253,11 @@ document.addEventListener("DOMContentLoaded", () => {
       form.hidden = false;
       senderNameInput.value = savedName;
       messageEditable.innerHTML = "";
-      if (charCountEl) charCountEl.textContent = "0 ký tự";
+      if (charCountEl) {
+        charCountEl.textContent = `0 / ${MAX_TEXT_CHARS} ký tự`;
+        charCountEl.style.color = '';
+        charCountEl.style.fontWeight = '';
+      }
       if (wishPreview) wishPreview.hidden = true;
       senderNameInput.focus();
     });
@@ -269,7 +287,11 @@ document.addEventListener("DOMContentLoaded", () => {
         form.reset();
         senderNameInput.value = savedName;
         messageEditable.innerHTML = ""; // Clear contenteditable div
-        if (charCountEl) charCountEl.textContent = "0 ký tự";
+        if (charCountEl) {
+          charCountEl.textContent = `0 / ${MAX_TEXT_CHARS} ký tự`;
+          charCountEl.style.color = '';
+          charCountEl.style.fontWeight = '';
+        }
         // Hide SVG picker on success
         if (svgPickerContainer) {
           svgPickerContainer.hidden = true;

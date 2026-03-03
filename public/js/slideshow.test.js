@@ -88,4 +88,33 @@ describe("buildSlides", () => {
     expect(photos).toEqual(photosCopy);
     expect(wishes).toEqual(wishesCopy);
   });
+
+  it("distributes wishes evenly: each wish appears floor(N/W) or ceil(N/W) times", () => {
+    const photos = Array.from({ length: 38 }, (_, i) => ({
+      id: `p${i}`, photoUrl: `https://example.com/${i}.jpg`, caption: "",
+    }));
+    const wishes = Array.from({ length: 15 }, (_, i) => ({
+      id: `w${i}`, senderName: `Sender ${i}`, message: `Message ${i} hello`,
+    }));
+
+    const slides = buildSlides(photos, wishes);
+    expect(slides).toHaveLength(38);
+
+    // Count occurrences of each wish
+    const counts = {};
+    for (const slide of slides) {
+      counts[slide.wish.id] = (counts[slide.wish.id] || 0) + 1;
+    }
+
+    // Each wish should appear floor(38/15)=2 or ceil(38/15)=3 times
+    const minExpected = Math.floor(38 / 15); // 2
+    const maxExpected = Math.ceil(38 / 15);  // 3
+    for (const wishId of Object.keys(counts)) {
+      expect(counts[wishId]).toBeGreaterThanOrEqual(minExpected);
+      expect(counts[wishId]).toBeLessThanOrEqual(maxExpected);
+    }
+
+    // All 15 wishes should appear
+    expect(Object.keys(counts)).toHaveLength(15);
+  });
 });

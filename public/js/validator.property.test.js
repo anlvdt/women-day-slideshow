@@ -8,7 +8,7 @@ import { validateWishForm } from "./validator.js";
  * ∀ formData:
  *   validateWishForm(formData).isValid === true
  *   ⟺ formData.senderName.trim().length ∈ [2, 50]
- *      ∧ formData.message.trim().length ∈ [5, 500]
+ *      ∧ formData.message.trim().length ∈ [5, 200]
  *
  * **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5, 2.6**
  */
@@ -24,10 +24,10 @@ describe("Property P2: Tính đúng đắn của validation", () => {
     const isNameValid = nameLen >= 2 && nameLen <= 50;
 
     // Valid message if:
-    // It's not empty AND length <= 5000 AND
+    // It's not empty AND length <= 5000 AND textOnly <= 200 AND
     // (textOnly length >= 2 OR it contains an SVG)
     let isMsgValid = false;
-    if (rawMessage.length > 0 && rawMessage.length <= 5000) {
+    if (rawMessage.length > 0 && rawMessage.length <= 5000 && textOnly.length <= 200) {
       if (textOnly.length >= 2 || rawMessage.indexOf("<svg") !== -1) {
         isMsgValid = true;
       }
@@ -62,13 +62,13 @@ describe("Property P2: Tính đúng đắn của validation", () => {
         return len >= 2 && len <= 50;
       });
 
-    // Generator for valid message: trimmed length in [2, 5000]
+    // Generator for valid message: trimmed text length in [2, 200], raw length <= 5000
     const validMessage = fc
-      .string({ minLength: 2, maxLength: 5000 })
+      .string({ minLength: 2, maxLength: 200 })
       .filter((s) => {
         const rawMessage = s.trim();
         const textOnly = rawMessage.replace(/<[^>]*>?/gm, "").trim();
-        return rawMessage.length > 0 && rawMessage.length <= 5000 && (textOnly.length >= 2 || rawMessage.indexOf("<svg") !== -1);
+        return rawMessage.length > 0 && rawMessage.length <= 5000 && textOnly.length <= 200 && (textOnly.length >= 2 || rawMessage.indexOf("<svg") !== -1);
       });
 
     fc.assert(

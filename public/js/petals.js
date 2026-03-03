@@ -24,9 +24,11 @@ export function startPetalRain(container, petalCount = 30) {
     const initialRotation = Math.floor(Math.random() * 360);
     const opacity = 0.5 + Math.random() * 0.4;
 
+    const swayDuration = 2 + Math.random() * 3;
+
     petal.style.cssText = `
       left: ${startX}%;
-      animation-duration: ${duration}s;
+      animation-duration: ${duration}s, ${swayDuration}s;
       animation-delay: ${delay}s;
       width: ${size}px;
       height: ${size}px;
@@ -36,4 +38,13 @@ export function startPetalRain(container, petalCount = 30) {
 
     container.appendChild(petal);
   }
+}
+
+/**
+ * Stop petal rain and remove all petal elements from the container.
+ * @param {HTMLElement} container - The DOM element containing petals
+ */
+export function stopPetalRain(container) {
+  const petals = container.querySelectorAll(".petal");
+  petals.forEach(p => p.remove());
 }

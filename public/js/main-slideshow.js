@@ -25,8 +25,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const canvas = document.getElementById("hearts-canvas");
   const petalsContainer = document.getElementById("petals-container");
 
-  // Start visual effects immediately
-  animateHearts(canvas);
+  // Start visual effects — but defer animation until user starts playback
+  const heartsEngine = animateHearts(canvas);
+  heartsEngine.stop(); // Don't animate until play
   startPetalRain(petalsContainer, 30);
 
   // Fetch data from Firestore and start slideshow
@@ -45,6 +46,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       e.preventDefault();
       togglePlayPause();
     }
+
+    const loopBtn = e.target.closest("#loop-mode-btn");
+    if (loopBtn) {
+      e.preventDefault();
+      toggleLoopMode();
+    }
   });
 
   // Allow pressing 'F' (fullscreen), 'Space' (play/pause), 'N' (skip track)
@@ -58,6 +65,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     if (e.key.toLowerCase() === 'n') {
       if (typeof window.skipTrack === "function") window.skipTrack();
+    }
+    if (e.key.toLowerCase() === 'l') {
+      toggleLoopMode();
     }
   });
 
@@ -107,7 +117,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Track change callback from music.js
   window.onTrackChange = (index, track, total) => {
-    if (total <= 0) { nowPlaying.hidden = true; return; }
+    if (total <= 0 || index < 0) { nowPlaying.hidden = true; return; }
     let label = "";
     if (track.type === "youtube") {
       label = track.youtubeUrl ? `YouTube` : `YouTube`;
@@ -124,8 +134,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (typeof window.toggleSlideshowPlayback === "function") {
       const isPlaying = window.toggleSlideshowPlayback();
       updatePlayPauseUI(isPlaying);
+      // Sync particle animation with playback
+      if (isPlaying) {
+        heartsEngine.animate();
+      } else {
+        heartsEngine.stop();
+      }
     }
   }
+
+  function toggleLoopMode() {
+    if (typeof window.setPlaybackMode !== "function") return;
+    const current = window.getPlaybackMode();
+    const next = current === "once" ? "loop" : "once";
+    window.setPlaybackMode(next);
+    updateLoopModeUI(next);
+  }
+
+  function updateLoopModeUI(mode) {
+    const btn = document.getElementById("loop-mode-btn");
+    if (!btn) return;
+    const badge = btn.querySelector(".mode-badge");
+    if (mode === "once") {
+      btn.title = "Chế độ: Bắt đầu → Kết thúc (L)";
+      if (badge) { badge.textContent = "1"; badge.style.display = ""; }
+    } else {
+      btn.title = "Chế độ: Phát liên tục (L)";
+      if (badge) { badge.textContent = "∞"; badge.style.display = ""; }
+    }
+  }
+
+  // Called by slideshow.js when playback stops (e.g., after outro in "once" mode)
+  window.onPlaybackStop = () => {
+    updatePlayPauseUI(false);
+    heartsEngine.stop();
+  };
 
   function toggleFullScreen() {
     const doc = window.document;
@@ -134,20 +177,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
     const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
 
+    // iOS Safari doesn't support Fullscreen API at all — fallback to just toggling playback
+    if (!requestFullScreen) {
+      togglePlayPause();
+      return;
+    }
+
     if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
-      if (requestFullScreen) {
-        requestFullScreen.call(docEl).then(() => {
-          // Entering fullscreen naturally means "start playing"
-          if (typeof window.setSlideshowPlaying === "function") {
-            const isPlaying = window.setSlideshowPlaying(true);
-            updatePlayPauseUI(isPlaying);
-          } else if (typeof window.playGlobalMusic === "function") {
-            window.playGlobalMusic();
-          }
-        }).catch(err => {
-          console.warn(`Error attempting to enable full-screen mode: ${err.message}`);
-        });
-      }
+      requestFullScreen.call(docEl).then(() => {
+        // Entering fullscreen naturally means "start playing"
+        if (typeof window.setSlideshowPlaying === "function") {
+          const isPlaying = window.setSlideshowPlaying(true);
+          updatePlayPauseUI(isPlaying);
+          if (isPlaying) heartsEngine.animate();
+        } else if (typeof window.playGlobalMusic === "function") {
+          window.playGlobalMusic();
+        }
+      }).catch(err => {
+        // Fullscreen failed (e.g. user gesture required) — still start playback
+        console.warn(`Fullscreen failed: ${err.message}, falling back to play/pause`);
+        togglePlayPause();
+      });
     } else {
       if (cancelFullScreen) {
         cancelFullScreen.call(doc);
@@ -161,6 +211,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (typeof window.setSlideshowPlaying === "function") {
         const isPlaying = window.setSlideshowPlaying(false);
         updatePlayPauseUI(isPlaying);
+        heartsEngine.stop();
       }
     }
   });

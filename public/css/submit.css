@@ -3,23 +3,31 @@
    Romantic/elegant theme for International Women's Day
    ============================================ */
 
-/* --- Reset & Base --- */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* --- Design Tokens (shared) --- */
+:root {
+  --color-pink-primary: #ec407a;
+  --color-pink-dark: #c2185b;
+  --color-pink-darker: #880e4f;
+  --color-pink-light: #f48fb1;
+  --color-pink-lighter: #f8bbd0;
+  --color-pink-bg: #fce4ec;
+  --color-text-dark: #4a1942;
+  --color-text-accent: #ad1457;
+  --font-display: 'Great Vibes', cursive;
+  --font-body: 'Dancing Script', cursive, sans-serif;
 }
+
+/* --- Reset & Base --- */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
 body {
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 40%, #f48fb1 100%);
-  font-family: 'Dancing Script', cursive, sans-serif;
-  color: #4a1942;
+  background: linear-gradient(135deg, var(--color-pink-bg) 0%, var(--color-pink-lighter) 40%, var(--color-pink-light) 100%);
+  font-family: var(--font-body);
+  color: var(--color-text-dark);
   padding: 1rem;
 }
 
@@ -27,8 +35,7 @@ body {
 .container {
   width: 100%;
   max-width: 680px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 20px;
   padding: 2.5rem 2rem;
   box-shadow: 0 8px 32px rgba(233, 30, 99, 0.15);
@@ -36,10 +43,10 @@ body {
 
 /* --- Title & Subtitle --- */
 .page-title {
-  font-family: 'Great Vibes', cursive;
+  font-family: var(--font-display);
   font-size: 2.5rem;
   text-align: center;
-  color: #c2185b;
+  color: var(--color-pink-dark);
   margin-bottom: 0.25rem;
   line-height: 1.3;
 }
@@ -47,7 +54,7 @@ body {
 .page-subtitle {
   text-align: center;
   font-size: 1.05rem;
-  color: #ad1457;
+  color: var(--color-text-accent);
   margin-bottom: 2rem;
   opacity: 0.85;
 }

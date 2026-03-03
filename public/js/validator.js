@@ -44,6 +44,8 @@ export function validateWishForm(formData) {
 
   if (rawMessage.length > 5000) {
     errors.push("Độ dài lời chúc vượt quá giới hạn hệ thống (tối đa 5000 ký tự)");
+  } else if (textOnly.length > 200) {
+    errors.push("Lời chúc tối đa 200 ký tự văn bản");
   }
 
   return { isValid: errors.length === 0, errors };

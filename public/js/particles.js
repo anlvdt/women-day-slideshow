@@ -73,7 +73,11 @@ export function createParticleEngine(canvas) {
 
   resizeCanvas();
   if (typeof window !== "undefined") {
-    window.addEventListener("resize", resizeCanvas);
+    let _resizeTimer = null;
+    window.addEventListener("resize", () => {
+      clearTimeout(_resizeTimer);
+      _resizeTimer = setTimeout(resizeCanvas, 150);
+    });
   }
 
   /**

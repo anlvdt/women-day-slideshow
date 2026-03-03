@@ -20,6 +20,7 @@ function createMockAudio() {
     load: vi.fn(),
     removeAttribute: vi.fn(),
     removeChild: vi.fn(),
+    addEventListener: vi.fn(),
   };
 }
 
@@ -75,7 +76,7 @@ describe("initBackgroundMusic", () => {
 
   it("window.playGlobalMusic should handle autoplay rejection gracefully", async () => {
     mockAudio.play = vi.fn(() => Promise.reject(new Error("Autoplay blocked")));
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
 
     initBackgroundMusic();
     globalThis.playGlobalMusic();
@@ -212,7 +213,7 @@ describe("initPlaylistMusic", () => {
   });
 
   it("should stop after all tracks error consecutively (infinite loop guard)", () => {
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
     const playlist = [
       { type: "mp3", audioUrl: "a.mp3", name: "A" },
       { type: "mp3", audioUrl: "b.mp3", name: "B" },

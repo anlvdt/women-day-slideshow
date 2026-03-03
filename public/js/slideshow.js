@@ -98,8 +98,10 @@ function shuffleArray(array) {
 }
 
 /**
- * Build slides by pairing photos[i] with wishes[i % wishes.length] (modulo).
- * Returns [] if either collection is empty.
+ * Build slides by pairing photos with wishes using round-robin re-shuffled distribution.
+ * Each wish appears floor(N/W) or ceil(N/W) times (differs by at most 1).
+ * Each round of wishes is independently shuffled for variety.
+ * Returns [] if photos is empty.
  *
  * @param {Array} photos - PhotoDocument[]
  * @param {Array} wishes - WishDocument[]
@@ -124,15 +126,22 @@ export function buildSlides(photos, wishes) {
     }));
   }
 
-  shuffleArray(wishesCopy);
-
   const slideCount = Math.max(photosCopy.length, wishesCopy.length);
-  const slides = [];
 
+  // Build evenly-distributed wish list via round-robin with re-shuffle per round
+  const distributedWishes = [];
+  while (distributedWishes.length < slideCount) {
+    const batch = [...wishesCopy];
+    shuffleArray(batch);
+    distributedWishes.push(...batch);
+  }
+  distributedWishes.length = slideCount; // trim to exact count
+
+  const slides = [];
   for (let i = 0; i < slideCount; i++) {
     slides.push({
       photo: photosCopy[i % photosCopy.length],
-      wish: wishesCopy[i % wishesCopy.length]
+      wish: distributedWishes[i]
     });
   }
 
@@ -150,8 +159,9 @@ const KENBURNS_CLASSES = [
 // --- Transition effects (enhanced) ---
 const TRANSITION_EFFECTS = ['crossfade', 'slide-right', 'slide-left', 'zoom', 'flip', 'fade-blur', 'scale-fade', 'curtain'];
 
-// --- Orientation cache (#13) ---
+// --- Orientation cache (#13) — bounded to prevent unbounded growth ---
 const _orientationCache = new Map();
+const _ORIENTATION_CACHE_MAX = 200;
 
 /**
  * Detect image orientation with caching.
@@ -164,6 +174,11 @@ export function detectOrientation(imageUrl) {
     const img = new Image();
     img.onload = () => {
       const result = img.naturalWidth >= img.naturalHeight ? "landscape" : "portrait";
+      if (_orientationCache.size >= _ORIENTATION_CACHE_MAX) {
+        // Evict oldest entry
+        const firstKey = _orientationCache.keys().next().value;
+        _orientationCache.delete(firstKey);
+      }
       _orientationCache.set(imageUrl, result);
       resolve(result);
     };
@@ -196,6 +211,14 @@ async function buildSlideElement(slideData) {
   slide.classList.add("slide");
   const config = window.slideshowConfig || { slideDuration: 8, transitionDuration: 1.5, enableKenBurns: true };
 
+  // Guard against missing photo URL
+  if (!slideData.photo?.photoUrl) {
+    const placeholder = document.createElement("div");
+    placeholder.classList.add("slide-placeholder");
+    slide.appendChild(placeholder);
+    return slide;
+  }
+
   const orientation = await detectOrientation(slideData.photo.photoUrl);
 
   if (orientation === "portrait") {
@@ -222,6 +245,8 @@ async function buildSlideElement(slideData) {
   } else {
     const landBg = document.createElement("div");
     landBg.classList.add("slide-bg");
+    landBg.setAttribute("role", "img");
+    landBg.setAttribute("aria-label", slideData.photo.caption || "Ảnh team nữ");
     landBg.style.backgroundImage = `url('${slideData.photo.photoUrl.replace(/'/g, "\\'")}')`;
     landBg.style.backgroundSize = "cover";
     landBg.style.backgroundPosition = "center";
@@ -249,7 +274,19 @@ async function buildSlideElement(slideData) {
 
     const messageEl = document.createElement("div");
     messageEl.classList.add("wish-message");
-    messageEl.innerHTML = sanitizeWishHTML(slideData.wish.message);
+
+    // Truncate long messages for slideshow display (keeps SVG icons, trims text)
+    const MAX_DISPLAY_CHARS = 200;
+    let msgHtml = sanitizeWishHTML(slideData.wish.message);
+    // Strip tags to measure text length
+    const textOnly = msgHtml.replace(/<[^>]*>?/gm, "").trim();
+    if (textOnly.length > MAX_DISPLAY_CHARS) {
+      // Truncate text-only version and re-wrap
+      const truncated = textOnly.substring(0, MAX_DISPLAY_CHARS) + "…";
+      messageEl.textContent = truncated;
+    } else {
+      messageEl.innerHTML = msgHtml;
+    }
 
     overlay.appendChild(senderEl);
     overlay.appendChild(messageEl);
@@ -291,8 +328,8 @@ export async function transitionToSlide(container, slideData) {
     const transProps = effect === 'fade-blur'
       ? `filter ${config.transitionDuration}s ease, opacity ${config.transitionDuration}s ease`
       : effect === 'curtain'
-      ? `clip-path ${config.transitionDuration}s ease`
-      : `transform ${config.transitionDuration}s ease, opacity ${config.transitionDuration}s ease`;
+        ? `clip-path ${config.transitionDuration}s ease`
+        : `transform ${config.transitionDuration}s ease, opacity ${config.transitionDuration}s ease`;
     newSlide.style.transition = transProps;
   }
 
@@ -317,7 +354,7 @@ export async function transitionToSlide(container, slideData) {
     Array.from(container.children).forEach(child => {
       if (child !== newSlide) child.remove();
     });
-  }, config.transitionDuration * 1000);
+  }, config.transitionDuration * 1000 + 100);
 }
 
 /**
@@ -350,8 +387,10 @@ export function createIntroSlide() {
   slide.appendChild(subtitle);
   slide.appendChild(date);
 
-  // Add continuous glow after initial reveal
-  setTimeout(() => title.classList.add("title-glow"), 1600);
+  // Add continuous glow after initial reveal, respecting config timing
+  const cfg = window.slideshowConfig || { slideDuration: 8 };
+  const glowDelay = Math.max(0, Math.min(1600, cfg.slideDuration * 1000 - 200));
+  setTimeout(() => title.classList.add("title-glow"), glowDelay);
 
   return slide;
 }
@@ -386,8 +425,10 @@ export function createOutroSlide() {
   slide.appendChild(subtitle);
   slide.appendChild(tagline);
 
-  // Add continuous glow after initial reveal
-  setTimeout(() => title.classList.add("title-glow"), 1600);
+  // Add continuous glow after initial reveal, respecting config timing
+  const cfg2 = window.slideshowConfig || { slideDuration: 8 };
+  const glowDelay2 = Math.max(0, Math.min(1600, cfg2.slideDuration * 1000 - 200));
+  setTimeout(() => title.classList.add("title-glow"), glowDelay2);
 
   return slide;
 }
@@ -415,7 +456,7 @@ export function transitionToSpecialSlide(container, type) {
     Array.from(container.children).forEach(child => {
       if (child !== newSlide) child.remove();
     });
-  }, config.transitionDuration * 1000);
+  }, config.transitionDuration * 1000 + 100);
 }
 
 /**
@@ -450,8 +491,11 @@ export async function initSlideshow(containerEl) {
   let sequence = [];
   let currentIndex = 0;
   let isPlaying = false;
+  let loopMode = "once"; // "once" = intro→slides→outro→stop, "loop" = continuous
   let loopTimeoutId = null;
   let initialized = false;
+  let _unsubPhotos = null;
+  let _unsubWishes = null;
 
   function rebuildSequence() {
     const slides = buildSlides([...photos], [...wishes]);
@@ -487,8 +531,30 @@ export async function initSlideshow(containerEl) {
     }
   }
 
+  /**
+   * Preload the next slide's image to avoid visible loading delay.
+   */
+  const _prefetchedUrls = new Set();
+  function preloadNextImage() {
+    if (sequence.length === 0) return;
+    const nextIdx = (currentIndex + 1) % sequence.length;
+    const nextItem = sequence[nextIdx];
+    if (nextItem && typeof nextItem === 'object' && nextItem.photo?.photoUrl) {
+      const url = nextItem.photo.photoUrl;
+      if (!_prefetchedUrls.has(url)) {
+        _prefetchedUrls.add(url);
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.as = 'image';
+        link.href = url;
+        document.head.appendChild(link);
+      }
+    }
+  }
+
   function playLoop() {
     if (!isPlaying) return;
+    clearTimeout(loopTimeoutId);
     loopTimeoutId = setTimeout(async () => {
       if (!isPlaying || sequence.length === 0) return;
 
@@ -500,6 +566,17 @@ export async function initSlideshow(containerEl) {
           transitionToSpecialSlide(containerEl, "intro");
         } else if (item === "outro") {
           transitionToSpecialSlide(containerEl, "outro");
+          // In "once" mode, stop after outro finishes displaying
+          if (loopMode === "once") {
+            updateCounter();
+            setTimeout(() => {
+              isPlaying = false;
+              clearTimeout(loopTimeoutId);
+              if (typeof window.pauseGlobalMusic === "function") window.pauseGlobalMusic();
+              if (typeof window.onPlaybackStop === "function") window.onPlaybackStop();
+            }, config.slideDuration * 1000);
+            return;
+          }
         } else {
           await transitionToSlide(containerEl, item);
         }
@@ -508,6 +585,7 @@ export async function initSlideshow(containerEl) {
       }
 
       updateCounter();
+      preloadNextImage();
       if (isPlaying) playLoop();
     }, config.slideDuration * 1000);
   }
@@ -546,9 +624,9 @@ export async function initSlideshow(containerEl) {
     }
   }
 
-  // Realtime listeners
+  // Realtime listeners (store unsubscribe functions for cleanup)
   const photosQuery = query(collection(db, "photos"), orderBy("createdAt", "asc"));
-  onSnapshot(photosQuery, async (snapshot) => {
+  _unsubPhotos = onSnapshot(photosQuery, async (snapshot) => {
     let allPhotos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
     // Apply custom order if available
@@ -571,7 +649,7 @@ export async function initSlideshow(containerEl) {
   });
 
   const wishesQuery = query(collection(db, "wishes"), orderBy("createdAt", "asc"));
-  onSnapshot(wishesQuery, (snapshot) => {
+  _unsubWishes = onSnapshot(wishesQuery, (snapshot) => {
     wishes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     wishesReady = true;
     tryInitialize();
@@ -601,4 +679,18 @@ export async function initSlideshow(containerEl) {
   };
 
   window.toggleSlideshowPlayback = () => window.setSlideshowPlaying();
+
+  // Playback mode controls
+  window.setPlaybackMode = (mode) => {
+    if (mode === "once" || mode === "loop") loopMode = mode;
+    return loopMode;
+  };
+  window.getPlaybackMode = () => loopMode;
+
+  // Cleanup Firestore listeners on page unload to prevent memory leaks
+  window.addEventListener('beforeunload', () => {
+    if (_unsubPhotos) { _unsubPhotos(); _unsubPhotos = null; }
+    if (_unsubWishes) { _unsubWishes(); _unsubWishes = null; }
+    clearTimeout(loopTimeoutId);
+  });
 }

@@ -5,11 +5,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Trình chiếu 8/3</title>
+  <meta name="description" content="Trình chiếu ảnh và lời chúc nhân ngày Quốc tế Phụ nữ 8/3">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <!-- Google Fonts: Great Vibes (headings/sender name), Dancing Script (wish content) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload"
+    href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&display=swap"
+    as="style">
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&display=swap"
     rel="stylesheet">
 
@@ -19,17 +23,28 @@
 </head>
 
 <body class="slideshow-page">
-  <nav class="floating-nav">
-    <a href="submit.html"><svg viewBox="0 0 24 24">
+  <nav class="floating-nav" aria-label="Điều hướng slideshow">
+    <a href="submit.html" aria-label="Gửi lời chúc"><svg viewBox="0 0 24 24" aria-hidden="true">
         <path
           d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" />
       </svg>Gửi lời chúc</a>
-    <a href="#" id="fullscreen-btn" title="Toàn màn hình (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <a href="#" id="fullscreen-btn" title="Toàn màn hình (F)" aria-label="Toàn màn hình"><svg viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        aria-hidden="true">
         <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
       </svg></a>
-    <a href="#" id="play-pause-btn" title="Tạm dừng / Phát tiếp (Space)"><svg viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <a href="#" id="loop-mode-btn" title="Chế độ: Bắt đầu → Kết thúc (L)" aria-label="Chuyển chế độ phát">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" aria-hidden="true">
+        <polyline points="17 1 21 5 17 9"></polyline>
+        <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+        <polyline points="7 23 3 19 7 15"></polyline>
+        <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+      </svg><span class="mode-badge">1</span>
+    </a>
+    <a href="#" id="play-pause-btn" title="Tạm dừng / Phát tiếp (Space)" aria-label="Tạm dừng hoặc phát tiếp"><svg
+        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" aria-hidden="true">
         <rect x="6" y="4" width="4" height="16"></rect>
         <rect x="14" y="4" width="4" height="16"></rect>
       </svg></a>

@@ -53,6 +53,11 @@ export function initPlaylistMusic(playlist) {
   // Clear any <source> children (stale bgm.mp3 reference)
   while (audioEl.firstChild) audioEl.removeChild(audioEl.firstChild);
   audioEl.onended = playNextTrack;
+  audioEl.addEventListener('playing', onTrackPlaying); // Reset error count when track actually plays
+  audioEl.onerror = () => {
+    console.error("Audio element error for track:", currentPlaylist[currentTrackIndex]);
+    if (isGlobalPlaying) playNextTrack();
+  };
 
   window.playGlobalMusic = () => {
     isGlobalPlaying = true;
@@ -139,6 +144,10 @@ function playCurrentTrack() {
     }
     audioEl.src = track.audioUrl;
     audioEl.onended = playNextTrack; // Re-attach after src change
+    audioEl.onerror = () => { // Re-attach error handler after src change
+      console.error("Audio playback error for track:", track);
+      if (isGlobalPlaying) playNextTrack();
+    };
     audioEl.load();
     audioEl.play().catch(e => console.warn(e));
 
@@ -147,11 +156,13 @@ function playCurrentTrack() {
     audioEl.pause();
 
     if (!ytPlayerReady) {
-      // YT API not ready yet — wait for it, then play
+      // YT API not ready yet — wait for it, then play (timeout after 15s)
+      let _ytWaitElapsed = 0;
       const waitForYT = setInterval(() => {
-        if (ytPlayerReady || !isGlobalPlaying) {
+        _ytWaitElapsed += 300;
+        if (ytPlayerReady || !isGlobalPlaying || _ytWaitElapsed > 15000) {
           clearInterval(waitForYT);
-          if (isGlobalPlaying) createOrUpdateYTPlayer(track.youtubeId, false);
+          if (isGlobalPlaying && ytPlayerReady) createOrUpdateYTPlayer(track.youtubeId, false);
         }
       }, 300);
       // Also kick off player creation if API is loaded but player not created
@@ -170,6 +181,10 @@ function playNextTrack() {
   if (_errorCount > currentPlaylist.length) {
     console.warn("All tracks failed, stopping playlist.");
     _errorCount = 0;
+    // Notify UI that all tracks failed
+    if (typeof window.onTrackChange === "function") {
+      window.onTrackChange(-1, { type: "error", name: "Tất cả bài hát đều lỗi" }, 0);
+    }
     return;
   }
 

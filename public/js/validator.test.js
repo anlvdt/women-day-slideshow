@@ -49,10 +49,13 @@ describe("validateWishForm", () => {
     expect(result.errors).toContain("Lời chúc phải từ 2 ký tự trở lên (hoặc chứa icon)");
   });
 
-  it("rejects message longer than 5000 chars", () => {
+  it("rejects message longer than 5000 raw chars", () => {
+    // Use SVG-heavy content to exceed 5000 raw chars while text is short
+    const svgBlock = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48"/></svg>';
+    const repeated = svgBlock.repeat(100); // ~7000 raw chars, minimal text
     const result = validateWishForm({
       senderName: "Test",
-      message: "A".repeat(5001),
+      message: repeated,
     });
     expect(result.isValid).toBe(false);
     expect(result.errors).toContain("Độ dài lời chúc vượt quá giới hạn hệ thống (tối đa 5000 ký tự)");
@@ -63,12 +66,20 @@ describe("validateWishForm", () => {
     expect(result.isValid).toBe(true);
   });
 
-  it("accepts message at boundary 5000 chars", () => {
+  it("accepts message at boundary 200 chars", () => {
     const result = validateWishForm({
       senderName: "Test",
-      message: "A".repeat(5000),
+      message: "A".repeat(200),
     });
     expect(result.isValid).toBe(true);
+  });
+
+  it("rejects message over 200 text chars", () => {
+    const result = validateWishForm({
+      senderName: "Test",
+      message: "A".repeat(201),
+    });
+    expect(result.isValid).toBe(false);
   });
 
   it("accepts short messages if they contain an SVG", () => {
