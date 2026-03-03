@@ -1,16 +1,6 @@
-// SlideshowEngine — Fetch photos + wishes from Firestore, build slides, autoplay
-// ES module: imports Firebase SDK from CDN
-
-import { db } from "./firebase-config.js";
-import {
-  collection,
-  getDocs,
-  getDoc,
-  doc,
-  onSnapshot,
-  query,
-  orderBy
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+// SlideshowEngine — Build slides from photo+wish data, render, autoplay
+// ES module: Firebase SDK is loaded dynamically only when initSlideshow() is called,
+// so pure DOM functions (buildSlides, createIntroSlide, etc.) work without Firebase.
 
 /**
  * Sanitize wish HTML to only allow safe SVG icons and basic text.
@@ -469,6 +459,11 @@ export function transitionToSpecialSlide(container, type) {
 export async function initSlideshow(containerEl) {
   // Show loading state while fetching data
   containerEl.innerHTML = '<div class="loading-message">Đang tải dữ liệu...</div>';
+
+  // Dynamic Firebase imports — only loaded when initSlideshow is called
+  const { db } = await import("./firebase-config.js");
+  const { collection, getDocs, getDoc, doc, onSnapshot, query, orderBy } =
+    await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js");
 
   // Fetch Settings (one-time, not realtime)
   const configQuery = await getDocs(query(collection(db, "config")));
