@@ -4,13 +4,14 @@
 
 ## Demo
 
-**Live:** [https://welovedladies.web.app](https://welovedladies.web.app)
+Ứng dụng bao gồm trang `demo.html` chạy offline với dữ liệu mẫu (không cần Firebase). Sau khi clone repo, mở file `public/demo.html` trong trình duyệt để xem demo slideshow với đầy đủ hiệu ứng.
 
 | Trang | Mô tả |
 |-------|-------|
-| [Trình chiếu](https://welovedladies.web.app/index.html) | Slideshow fullscreen với hiệu ứng Ken Burns, transition, particles, petals |
-| [Gửi lời chúc](https://welovedladies.web.app/submit.html) | Form gửi lời chúc với SVG icon picker |
-| [Admin](https://welovedladies.web.app/admin.html) | Quản lý ảnh, nhạc, cài đặt slideshow, lời chúc |
+| `index.html` | Slideshow fullscreen với hiệu ứng Ken Burns, transition, particles, petals. Kết nối Firestore realtime. |
+| `submit.html` | Form gửi lời chúc với SVG icon picker. Responsive, hoạt động trên mobile. |
+| `admin.html` | Quản lý ảnh, nhạc, cài đặt slideshow, lời chúc. Bảo vệ bằng mật khẩu. |
+| `demo.html` | Demo offline với ảnh mẫu từ picsum.photos, tự động chạy slideshow. |
 
 ## Tính năng
 
@@ -27,6 +28,19 @@
 - Xuất video (WebM via captureStream)
 - SVG icon picker cho lời chúc (thay emoji)
 - Responsive, hoạt động trên mobile
+
+## Slideshow Timing
+
+Thời gian hiển thị slide có thể tùy chỉnh trong trang Admin. Giá trị mặc định:
+
+| Thông số | Mặc định | Khuyến nghị | Ghi chú |
+|----------|----------|-------------|---------|
+| Thời gian slide | 8s | 5–8s (ảnh), 8–12s (có text) | Đủ để đọc lời chúc + ngắm ảnh |
+| Thời gian chuyển cảnh | 1.5s | 1–2s | Mượt mà, không quá nhanh/chậm |
+| Ken Burns duration | 9.5s (auto) | = slide + transition | Tự động tính, đảm bảo hiệu ứng liền mạch |
+| Ken Burns | Bật | Bật | Tạo chuyển động sống động cho ảnh tĩnh |
+
+Các giá trị mặc định đã được tối ưu dựa trên best practices cho slideshow trình chiếu sự kiện.
 
 ## Tech Stack
 
@@ -71,6 +85,7 @@ public/
 ├── index.html          # Trang slideshow (fullscreen)
 ├── submit.html         # Trang gửi lời chúc
 ├── admin.html          # Trang quản lý
+├── demo.html           # Demo offline (không cần Firebase)
 ├── css/
 │   ├── slideshow.css   # Styles slideshow + effects
 │   ├── admin.css       # Styles admin page
