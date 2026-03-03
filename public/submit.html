@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gửi lời chúc 8/3</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <!-- Google Fonts: Great Vibes (headings), Dancing Script (content) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&display=swap"
+    rel="stylesheet">
+
+  <!-- Page styles -->
+  <link rel="stylesheet" href="css/submit.css">
+  <link rel="stylesheet" href="css/nav.css">
+</head>
+
+<body>
+  <div class="container">
+    <nav class="site-nav">
+      <a href="index.html"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Trình chiếu</a>
+      <a href="submit.html" class="active"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>Gửi lời chúc</a>
+    </nav>
+
+    <h1 class="page-title">Gửi lời chúc 8/3</h1>
+    <p class="page-subtitle">Gửi lời chúc đến team nữ nhân ngày Quốc tế Phụ nữ</p>
+
+    <form id="wish-form" novalidate>
+      <!-- Tên người gửi -->
+      <div class="form-group">
+        <label for="sender-name">Tên người gửi</label>
+        <input type="text" id="sender-name" name="senderName" placeholder="Nhập tên của bạn"
+          maxlength="50" required>
+        <span class="field-error" id="sender-name-error"></span>
+      </div>
+
+      <!-- Lời chúc (text + emoji) -->
+      <div class="form-group">
+        <label for="message">Lời chúc</label>
+        <div class="message-wrapper">
+          <div id="message-editable" class="content-editable-input" contenteditable="true"
+            data-placeholder="Viết lời chúc của bạn..." role="textbox" aria-multiline="true"
+            aria-label="Lời chúc" aria-describedby="message-error">
+          </div>
+          <button type="button" id="emoji-toggle" class="emoji-toggle" aria-label="Chọn Icon" aria-pressed="false">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+              <line x1="9" y1="9" x2="9.01" y2="9"></line>
+              <line x1="15" y1="9" x2="15.01" y2="9"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="message-meta">
+          <span class="char-count" id="char-count">0 ký tự</span>
+        </div>
+        <div id="svg-picker-container" class="svg-picker-container" hidden>
+          <!-- SVG Icons injected by JS -->
+        </div>
+        <span class="field-error" id="message-error"></span>
+      </div>
+
+      <!-- Preview lời chúc -->
+      <div class="wish-preview" id="wish-preview" hidden>
+        <p class="wish-preview-label">Xem trước:</p>
+        <div class="wish-preview-card">
+          <span class="wish-preview-sender" id="preview-sender"></span>
+          <span class="wish-preview-message" id="preview-message"></span>
+        </div>
+      </div>
+
+      <!-- Nút gửi -->
+      <button type="submit" id="submit-btn" class="submit-btn">
+        Gửi lời chúc
+      </button>
+    </form>
+
+    <!-- Thông báo thành công -->
+    <div id="success-message" class="message success-message" hidden>
+      <p>Gửi lời chúc thành công! Cảm ơn bạn!</p>
+      <button type="button" id="send-another-btn" class="send-another-btn">Gửi lời chúc khác</button>
+    </div>
+
+    <!-- Thông báo lỗi -->
+    <div id="error-message" class="message error-message" hidden></div>
+  </div>
+
+  <!-- App modules (ES modules) -->
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/validator.js"></script>
+  <script type="module" src="js/submit.js"></script>
+</body>
+
+</html>

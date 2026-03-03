@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Slideshow 8/3</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/slideshow.css">
+  <link rel="stylesheet" href="css/nav.css">
+</head>
+
+<body class="slideshow-page">
+  <nav class="floating-nav">
+    <a href="submit.html"><svg viewBox="0 0 24 24">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" />
+      </svg>Gửi lời chúc</a>
+    <a href="#" id="fullscreen-btn" title="Toàn màn hình (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+      </svg></a>
+  </nav>
+
+  <div id="slideshow-container"></div>
+  <canvas id="hearts-canvas"></canvas>
+  <div id="petals-container"></div>
+
+  <script type="module">
+    import { animateHearts } from "./js/particles.js";
+    import { startPetalRain } from "./js/petals.js";
+    import {
+      buildSlides,
+      createIntroSlide,
+      createOutroSlide,
+      transitionToSlide,
+      transitionToSpecialSlide,
+    } from "./js/slideshow.js";
+
+    const demoPhotos = [
+      { id: "p1", photoUrl: "https://picsum.photos/1920/1080?random=1", caption: "Team nữ phòng Kỹ thuật" },
+      { id: "p2", photoUrl: "https://picsum.photos/800/1200?random=2", caption: "Chị Lan - PM" },
+      { id: "p3", photoUrl: "https://picsum.photos/1600/900?random=3", caption: "" },
+      { id: "p4", photoUrl: "https://picsum.photos/900/1400?random=4", caption: "Chị Hương - Designer" },
+      { id: "p5", photoUrl: "https://picsum.photos/1920/1080?random=5", caption: "Team nữ phòng Marketing" },
+    ];
+
+    const demoWishes = [
+      { id: "w1", senderName: "Anh Tuấn", message: "Chúc các chị ngày 8/3 thật nhiều niềm vui, hạnh phúc và luôn tỏa sáng!" },
+      { id: "w2", senderName: "Anh Minh", message: "Happy Women's Day! Chúc các chị luôn xinh đẹp và thành công" },
+      { id: "w3", senderName: "Anh Đức", message: "Ngày 8/3 chúc team nữ mãi mãi rạng rỡ như hoa" },
+    ];
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const container = document.getElementById("slideshow-container");
+      const canvas = document.getElementById("hearts-canvas");
+      const petalsContainer = document.getElementById("petals-container");
+
+      // Set demo config globally
+      window.slideshowConfig = { slideDuration: 6, transitionDuration: 1.2, enableKenBurns: true };
+
+      animateHearts(canvas);
+      startPetalRain(petalsContainer, 30);
+
+      const slides = buildSlides(demoPhotos, demoWishes);
+
+      if (slides.length === 0) {
+        container.innerHTML = '<div class="empty-message">Chưa có nội dung nào</div>';
+        return;
+      }
+
+      const sequence = ["intro", ...slides, "outro"];
+      let currentIndex = 0;
+
+      const introEl = createIntroSlide();
+      introEl.classList.add("active");
+      container.appendChild(introEl);
+
+      // Auto-play loop for demo
+      setInterval(async () => {
+        currentIndex = (currentIndex + 1) % sequence.length;
+        const item = sequence[currentIndex];
+
+        try {
+          if (item === "intro" || item === "outro") {
+            transitionToSpecialSlide(container, item);
+          } else {
+            await transitionToSlide(container, item);
+          }
+        } catch (err) {
+          console.error("Demo slide error:", err);
+        }
+      }, 6000);
+
+      // Fullscreen toggle
+      const fsBtn = document.getElementById("fullscreen-btn");
+      if (fsBtn) {
+        fsBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const docEl = document.documentElement;
+          if (!document.fullscreenElement) {
+            docEl.requestFullscreen?.().catch(() => {});
+          } else {
+            document.exitFullscreen?.();
+          }
+        });
+      }
+      document.addEventListener("keydown", (e) => {
+        if (e.key.toLowerCase() === "f") {
+          const docEl = document.documentElement;
+          if (!document.fullscreenElement) {
+            docEl.requestFullscreen?.().catch(() => {});
+          } else {
+            document.exitFullscreen?.();
+          }
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
