@@ -16,13 +16,31 @@
 
 <body class="slideshow-page">
   <nav class="floating-nav">
-    <a href="demo-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Demo</a>
+    <a href="demo-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg>Demo</a>
     <a href="demo-submit.html"><svg viewBox="0 0 24 24">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" />
+        <path
+          d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" />
       </svg>Gửi lời chúc</a>
     <a href="#" id="fullscreen-btn" title="Toàn màn hình (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+      </svg></a>
+    <a href="#" id="loop-mode-btn" title="Chế độ: Bắt đầu → Kết thúc (L)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <polyline points="17 1 21 5 17 9"></polyline>
+        <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+        <polyline points="7 23 3 19 7 15"></polyline>
+        <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+      </svg><span class="mode-badge">1</span>
+    </a>
+    <a href="#" id="play-pause-btn" title="Tạm dừng / Phát tiếp (Space)"><svg viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="5 3 19 12 5 21 5 3"></polygon>
       </svg></a>
   </nav>
 
@@ -60,14 +78,14 @@
       const canvas = document.getElementById("hearts-canvas");
       const petalsContainer = document.getElementById("petals-container");
 
-      // Set demo config globally
-      window.slideshowConfig = { slideDuration: 6, transitionDuration: 1.2, enableKenBurns: true };
+      const config = { slideDuration: 6, transitionDuration: 1.2, enableKenBurns: true };
+      window.slideshowConfig = config;
 
-      animateHearts(canvas);
+      const heartsEngine = animateHearts(canvas);
+      heartsEngine.stop();
       startPetalRain(petalsContainer, 30);
 
       const slides = buildSlides(demoPhotos, demoWishes);
-
       if (slides.length === 0) {
         container.innerHTML = '<div class="empty-message">Chưa có nội dung nào</div>';
         return;
@@ -75,48 +93,107 @@
 
       const sequence = ["intro", ...slides, "outro"];
       let currentIndex = 0;
+      let isPlaying = false;
+      let loopMode = "once";
+      let loopTimeoutId = null;
 
       const introEl = createIntroSlide();
       introEl.classList.add("active");
       container.appendChild(introEl);
 
-      // Auto-play loop for demo
-      setInterval(async () => {
-        currentIndex = (currentIndex + 1) % sequence.length;
-        const item = sequence[currentIndex];
-
-        try {
-          if (item === "intro" || item === "outro") {
-            transitionToSpecialSlide(container, item);
-          } else {
-            await transitionToSlide(container, item);
-          }
-        } catch (err) {
-          console.error("Demo slide error:", err);
-        }
-      }, 6000);
-
-      // Fullscreen toggle
-      const fsBtn = document.getElementById("fullscreen-btn");
-      if (fsBtn) {
-        fsBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          const docEl = document.documentElement;
-          if (!document.fullscreenElement) {
-            docEl.requestFullscreen?.().catch(() => {});
-          } else {
-            document.exitFullscreen?.();
-          }
-        });
+      function updatePlayPauseUI(playing) {
+        const btn = document.getElementById("play-pause-btn");
+        if (!btn) return;
+        btn.innerHTML = playing
+          ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`
+          : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
       }
-      document.addEventListener("keydown", (e) => {
-        if (e.key.toLowerCase() === "f") {
-          const docEl = document.documentElement;
-          if (!document.fullscreenElement) {
-            docEl.requestFullscreen?.().catch(() => {});
-          } else {
-            document.exitFullscreen?.();
+
+      function updateLoopModeUI(mode) {
+        const btn = document.getElementById("loop-mode-btn");
+        if (!btn) return;
+        const badge = btn.querySelector(".mode-badge");
+        if (mode === "once") {
+          btn.title = "Chế độ: Bắt đầu → Kết thúc (L)";
+          if (badge) badge.textContent = "1";
+        } else {
+          btn.title = "Chế độ: Phát liên tục (L)";
+          if (badge) badge.textContent = "∞";
+        }
+      }
+
+      function playLoop() {
+        if (!isPlaying) return;
+        clearTimeout(loopTimeoutId);
+        loopTimeoutId = setTimeout(async () => {
+          if (!isPlaying || sequence.length === 0) return;
+          currentIndex = (currentIndex + 1) % sequence.length;
+          const item = sequence[currentIndex];
+          try {
+            if (item === "intro" || item === "outro") {
+              transitionToSpecialSlide(container, item);
+              if (item === "outro" && loopMode === "once") {
+                setTimeout(() => {
+                  isPlaying = false;
+                  clearTimeout(loopTimeoutId);
+                  updatePlayPauseUI(false);
+                  heartsEngine.stop();
+                }, config.slideDuration * 1000);
+                return;
+              }
+            } else {
+              await transitionToSlide(container, item);
+            }
+          } catch (err) {
+            console.error("Demo slide error:", err);
           }
+          if (isPlaying) playLoop();
+        }, config.slideDuration * 1000);
+      }
+
+      function togglePlayPause() {
+        isPlaying = !isPlaying;
+        updatePlayPauseUI(isPlaying);
+        if (isPlaying) { playLoop(); heartsEngine.animate(); }
+        else { clearTimeout(loopTimeoutId); heartsEngine.stop(); }
+      }
+
+      function toggleLoopMode() {
+        loopMode = loopMode === "once" ? "loop" : "once";
+        updateLoopModeUI(loopMode);
+      }
+
+      function toggleFullScreen() {
+        const docEl = document.documentElement;
+        const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullScreen;
+        if (!requestFS) { togglePlayPause(); return; }
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+          requestFS.call(docEl).then(() => {
+            if (!isPlaying) togglePlayPause();
+          }).catch(() => { togglePlayPause(); });
+        } else {
+          (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
+        }
+      }
+
+      document.addEventListener("click", (e) => {
+        const fs = e.target.closest("#fullscreen-btn");
+        if (fs) { e.preventDefault(); toggleFullScreen(); }
+        const pp = e.target.closest("#play-pause-btn");
+        if (pp) { e.preventDefault(); togglePlayPause(); }
+        const lm = e.target.closest("#loop-mode-btn");
+        if (lm) { e.preventDefault(); toggleLoopMode(); }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key.toLowerCase() === "f") toggleFullScreen();
+        if (e.code === "Space" || e.key === " ") { e.preventDefault(); togglePlayPause(); }
+        if (e.key.toLowerCase() === "l") toggleLoopMode();
+      });
+
+      document.addEventListener("fullscreenchange", () => {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+          if (isPlaying) togglePlayPause();
         }
       });
     });
